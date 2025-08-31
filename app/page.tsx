@@ -1,5 +1,4 @@
 import { SiteHeader } from "@/components/site-header"
-import dynamic from "next/dynamic"
 import { Hero } from "@/components/hero"
 import { SectionsServices } from "@/components/sections-services"
 import { SectionsProjects } from "@/components/sections-projects"
@@ -7,15 +6,14 @@ import { SectionsExperience } from "@/components/sections-experience"
 import { SectionsAbout } from "@/components/sections-about"
 import { SectionsCertifications } from "@/components/sections-certifications"
 import { SectionsContact } from "@/components/sections-contact"
-
-const Hero3DLazy = dynamic(() => import("@/components/hero-3d").then((m) => m.Hero3D), { ssr: false })
+import Hero3DClient from "./hero3d-client"
 
 export default function HomePage() {
   return (
     <main id="main">
       <SiteHeader />
       <section className="relative">
-        <Hero3DLazy />
+        <Hero3DClient />
         <Hero />
       </section>
       <SectionsServices />
