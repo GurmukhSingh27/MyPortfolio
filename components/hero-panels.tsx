@@ -29,7 +29,14 @@ function PanelsRingInner() {
       {panels.map((p, i) => (
         <mesh key={i} position={p.pos} rotation={[0, p.rotY, 0]}>
           <planeGeometry args={[1.2, 0.9]} />
-          <meshStandardMaterial color={p.color} emissive={p.color} emissiveIntensity={0.6} transparent opacity={0.9} />
+          <meshStandardMaterial
+            color={p.color}
+            emissive={p.color}
+            emissiveIntensity={0.6}
+            transparent
+            opacity={0.28}
+            depthWrite={false}
+          />
           {/* mini bars overlay */}
           <group position={[0, 0, 0.02]}>
             {[0.25, 0.5, 0.75, 0.4].map((h, idx) => (
