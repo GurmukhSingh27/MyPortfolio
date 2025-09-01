@@ -42,7 +42,7 @@ export function Hero() {
 
           {/* Right: rotating analytics panels */}
           <div className="relative">
-            <div className="rounded-xl border border-[var(--border)]/40 bg-black/20 backdrop-blur-sm">
+            <div className="relative z-10 rounded-xl border border-[var(--border)]/40">
               <HeroPanels3D />
             </div>
           </div>
