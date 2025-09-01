@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Mail, Phone, Linkedin, Github } from "lucide-react" // icons
+import { Mail, Phone, Linkedin, Github, Download } from "lucide-react" // icons
 
 export function SectionsContact() {
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle")
@@ -73,6 +73,17 @@ export function SectionsContact() {
               <Github className="size-4" />
             </span>
             <span className="text-sm">github.com/GurmukhSingh27</span>
+          </a>
+          <a
+            href="/cv.pdf"
+            download
+            className="flex items-center gap-3 rounded-md border border-[var(--border)] bg-[color-mix(in_oklch,_var(--color-brand)_12%,_black)] px-3 py-2 hover:brightness-110"
+            aria-label="Download CV"
+          >
+            <span className="inline-flex size-7 items-center justify-center rounded bg-[var(--color-brand)] text-black">
+              <Download className="size-4" />
+            </span>
+            <span className="text-sm">Download CV</span>
           </a>
         </div>
 
