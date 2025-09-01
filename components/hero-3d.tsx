@@ -120,28 +120,126 @@ function Panel({
   )
 }
 
-function PanelsRing({ reduced, mobile }: { reduced: boolean; mobile: boolean }) {
+function NodeNetwork({ reduced, mobile }: { reduced: boolean; mobile: boolean }) {
   const group = useRef<THREE.Group>(null)
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const panelCount = mobile ? 4 : 7
-  const radius = mobile ? 2.4 : 3.2
+
+  const { linesArray, nodesBlue, nodesPink, nodesGreen } = useMemo(() => {
+    const count = reduced ? (mobile ? 60 : 120) : mobile ? 90 : 180
+    const radius = mobile ? 5 : 7
+
+    // Generate points uniformly in a sphere
+    const pts: THREE.Vector3[] = []
+    for (let i = 0; i < count; i++) {
+      // sample direction
+      const u = Math.random() * 2 - 1
+      const theta = Math.random() * Math.PI * 2
+      const r = Math.cbrt(Math.random()) * radius
+      const x = Math.sqrt(1 - u * u) * Math.cos(theta)
+      const y = Math.sqrt(1 - u * u) * Math.sin(theta)
+      const z = u
+      pts.push(new THREE.Vector3(x * r, y * r, z * r))
+    }
+
+    // Build sparse connections to nearest neighbors
+    const maxNeighbors = 2
+    const maxDist = mobile ? 2.2 : 2.8
+    const lines: number[] = []
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i]
+      // compute distances
+      const distIdx: { d: number; j: number }[] = []
+      for (let j = i + 1; j < pts.length; j++) {
+        const d = a.distanceTo(pts[j])
+        if (d <= maxDist) distIdx.push({ d, j })
+      }
+      distIdx.sort((p, q) => p.d - q.d)
+      const toConnect = Math.min(maxNeighbors, distIdx.length)
+      for (let k = 0; k < toConnect; k++) {
+        const b = pts[distIdx[k].j]
+        lines.push(a.x, a.y, a.z, b.x, b.y, b.z)
+      }
+    }
+
+    // Split nodes into three color groups (blue, pink, green)
+    const blue: number[] = []
+    const pink: number[] = []
+    const green: number[] = []
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i]
+      if (i % 3 === 0) {
+        blue.push(p.x, p.y, p.z)
+      } else if (i % 3 === 1) {
+        pink.push(p.x, p.y, p.z)
+      } else {
+        green.push(p.x, p.y, p.z)
+      }
+    }
+
+    return {
+      linesArray: new Float32Array(lines),
+      nodesBlue: new Float32Array(blue),
+      nodesPink: new Float32Array(pink),
+      nodesGreen: new Float32Array(green),
+    }
+  }, [reduced, mobile])
 
   useFrame((_, delta) => {
-    if (group.current && !reduced) group.current.rotation.z += delta * 0.12
+    if (group.current && !reduced) {
+      group.current.rotation.y += delta * 0.05
+      group.current.rotation.x = Math.sin(performance.now() * 0.00005) * 0.08
+    }
   })
 
   return (
     <group ref={group}>
-      {Array.from({ length: panelCount }).map((_, i) => (
-        <Panel
-          key={i}
-          index={i}
-          radius={radius}
-          hoveredIndex={hoveredIndex}
-          setHoveredIndex={setHoveredIndex}
-          reduced={reduced}
+      {/* connective lines */}
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" array={linesArray} count={linesArray.length / 3} itemSize={3} />
+        </bufferGeometry>
+        <lineBasicMaterial color="#06B6D4" transparent opacity={0.18} />
+      </lineSegments>
+
+      {/* node points: blue, pink, green */}
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" array={nodesBlue} count={nodesBlue.length / 3} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial
+          color="#06B6D4"
+          size={mobile ? 0.015 : 0.02}
+          sizeAttenuation
+          transparent
+          opacity={0.95}
+          blending={THREE.AdditiveBlending}
         />
-      ))}
+      </points>
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" array={nodesPink} count={nodesPink.length / 3} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial
+          color="#FF3B81"
+          size={mobile ? 0.015 : 0.02}
+          sizeAttenuation
+          transparent
+          opacity={0.95}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" array={nodesGreen} count={nodesGreen.length / 3} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial
+          color="#22C55E"
+          size={mobile ? 0.013 : 0.018}
+          sizeAttenuation
+          transparent
+          opacity={0.9}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
     </group>
   )
 }
@@ -180,13 +278,15 @@ export function Hero3D() {
         <pointLight position={[-6, -4, -2]} intensity={0.9} color={"#FF3B81"} />
         <pointLight position={[0, -2, 4]} intensity={0.25} color={"#22C55E"} />
 
-        <PanelsRing reduced={reduced} mobile={mobile} />
+        <group position={[0, 0, -1]}>
+          <NodeNetwork reduced={reduced} mobile={mobile} />
+        </group>
 
         {/* Fallback label for reduced motion */}
         {reduced && (
           <Html center>
             <div className="rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-xs text-[var(--color-neutral-2)]">
-              Analytics overview
+              Network backdrop
             </div>
           </Html>
         )}
